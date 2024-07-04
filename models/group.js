@@ -11,4 +11,10 @@ const GroupSchema = new Schema({
   description: { type: String },
 });
 
+// Pre-save hook to update the updatedAt field
+GroupSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
 module.exports = mongoose.model("Group", GroupSchema);

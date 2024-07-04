@@ -9,4 +9,10 @@ const ConversationSchema = new Schema({
   lastMessageId: { type: Schema.Types.ObjectId, ref: "Message" },
 });
 
+// Pre-save hook to update the updatedAt field
+ConversationSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
 modules.exports = mongoose.model("Conversation", ConversationSchema);
