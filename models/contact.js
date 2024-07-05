@@ -7,7 +7,7 @@ const ContactSchema = new Schema({
   contact: { type: Schema.Types.ObjectId, ref: "User", required: true },
   status: {
     type: String,
-    enum: ["pending", "accepted", "rejected", "blocked"],
+    enum: ["pending", "accepted", "blocked"],
     default: "pending",
     required: true,
   },
