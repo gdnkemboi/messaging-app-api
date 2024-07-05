@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router;
+const router = express.Router();
 
 const notificationControllers = require("../controllers/notifications.js");
 
@@ -9,3 +9,5 @@ router.put(
   "/notifications/:notificationId/read",
   notificationControllers.updateNotification
 );
+
+module.exports = router;

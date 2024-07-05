@@ -6,6 +6,6 @@ exports.getMessages = (req, res, next) => {
   res.send("NOT IMPLEMENTED: Get Messages");
 };
 
-exports.updateMessage = (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Update Message");
+exports.updateMessageStatus = (req, res, next) => {
+  res.send("NOT IMPLEMENTED: Update Message Status");
 };
