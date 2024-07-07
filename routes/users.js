@@ -6,8 +6,6 @@ router.post("/signup", userControllers.signup);
 
 router.post("/signin", userControllers.signin);
 
-router.post("/signout", userControllers.signout);
-
 router.get("/profile", userControllers.getProfile);
 
 router.put("/profile", userControllers.updateProfile);
