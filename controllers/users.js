@@ -74,7 +74,7 @@ exports.signin = [
         return res.status(400).json({ message: "Invalid credentials", info });
       }
       const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
-        expiresIn: "1h",
+        expiresIn: "7d",
       });
 
       res.json({ message: "Signed In successfully", token });

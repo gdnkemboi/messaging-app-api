@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 
 const MessageSchema = new Schema({
   sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  conversation: { type: Schema.Types.ObjectId, required: true },
-  converstionType: {
+  chat: { type: Schema.Types.ObjectId, required: true },
+  chatType: {
     type: String,
     required: true,
-    enum: ["conversation", "group"],
+    enum: ["chat", "group"],
   },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now() },

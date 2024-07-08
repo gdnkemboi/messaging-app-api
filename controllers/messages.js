@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Message = require("../models/message");
-const Conversation = require("../models/conversation");
+const Chat = require("../models/chat");
 const { body, validationResult } = require("express-validator");
 const passport = require("passport");
 
@@ -20,33 +20,33 @@ exports.sendMessage = [
     const { receiverId } = req.params;
     const senderId = req.user._id;
 
-    // Check if conversation already exists
-    let conversation = await Conversation.findOne({
+    // Check if chat already exists
+    let chat = await Chat.findOne({
       participants: { $all: [senderId, receiverId] },
     });
 
     // If no converstion foun, create a new one
-    if (!conversation) {
-      const newConversation = new Conversation({
+    if (!chat) {
+      const newChat = new Chat({
         participants: [senderId, receiverId],
       });
 
-      conversation = await newConversation.save();
+      chat = await newChat.save();
     }
 
     // Create a new message instance
     const newMessage = new Message({
       sender: req.user._id,
-      conversation: conversation._id,
-      converstionType: "conversation",
+      chat: chat._id,
+      chatType: "chat",
       content: req.body.content,
     });
 
     const message = await newMessage.save();
 
     // Add lastMessageId to converstion
-    conversation.lastMessageId = message._id;
-    await conversation.save();
+    chat.lastMessageId = message._id;
+    await chat.save();
 
     res.status(200).json({ msg: "Message received successfully", message });
   }),

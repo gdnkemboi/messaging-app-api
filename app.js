@@ -15,7 +15,7 @@ async function main() {
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const messagesRouter = require("./routes/messages");
-const conversationsRouter = require("./routes/conversations");
+const chatsRouter = require("./routes/chats");
 const groupsRouter = require("./routes/groups");
 const contactsRouter = require("./routes/contacts");
 const notificationsRouter = require("./routes/notifications");
@@ -33,7 +33,7 @@ app.use(passport.initialize());
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/api", messagesRouter);
-app.use("/api", conversationsRouter);
+app.use("/api", chatsRouter);
 app.use("/api", groupsRouter);
 app.use("/api", contactsRouter);
 app.use("/api", notificationsRouter);
