@@ -1,9 +1,9 @@
-exports.createConversation = (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Create Conversation");
-};
-
 exports.getConversations = (req, res, next) => {
   res.send("NOT IMPLEMENTED: Get Conversations");
+};
+
+exports.getConversationMessages = (req, res, next) => {
+  res.send("NOT IMPLEMENTED: Get Conversation Messages");
 };
 
 exports.getConversationDetail = (req, res, next) => {

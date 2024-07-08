@@ -32,10 +32,31 @@ app.use(passport.initialize());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/", messagesRouter);
-app.use("/", conversationsRouter);
-app.use("/", groupsRouter);
-app.use("/", contactsRouter);
-app.use("/", notificationsRouter);
+app.use("/api", messagesRouter);
+app.use("/api", conversationsRouter);
+app.use("/api", groupsRouter);
+app.use("/api", contactsRouter);
+app.use("/api", notificationsRouter);
+
+// Catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  const err = new Error("Not Found");
+  err.status = 404;
+  next(err);
+});
+
+// Error handler
+app.use(function (err, req, res, next) {
+  // Set response status code
+  res.status(err.status || 500);
+
+  // Return JSON response
+  res.json({
+    error: {
+      message: err.message,
+      status: err.status || 500,
+    },
+  });
+});
 
 module.exports = app;

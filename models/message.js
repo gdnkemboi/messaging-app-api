@@ -8,7 +8,7 @@ const MessageSchema = new Schema({
   converstionType: {
     type: String,
     required: true,
-    enum: ["Conversion", "Group"],
+    enum: ["conversation", "group"],
   },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now() },

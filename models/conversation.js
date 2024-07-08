@@ -15,4 +15,4 @@ ConversationSchema.pre("save", function (next) {
   next();
 });
 
-modules.exports = mongoose.model("Conversation", ConversationSchema);
+module.exports = mongoose.model("Conversation", ConversationSchema);

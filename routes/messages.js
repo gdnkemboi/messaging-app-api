@@ -3,10 +3,8 @@ const router = express.Router();
 
 const messageControllers = require("../controllers/messages");
 
-router.post("/messages", messageControllers.sendMessage);
+router.post("/messages/:receiverId/send", messageControllers.sendMessage);
 
-router.get("/:conversationId/messages", messageControllers.getMessages);
-
-router.put("/messages/:msgId", messageControllers.updateMessageStatus);
+router.put("/messages/:msgId/update/:status", messageControllers.updateMessageStatus);
 
 module.exports = router;
