@@ -47,14 +47,80 @@ exports.createGroup = [
 
     let group = new Group({
       name: req.body.name,
+      description: req.body.description,
       admin: req.user._id,
       members: members,
-      description: req.body.description,
     });
 
     group = await group.save();
 
     res.json({ message: "Group created successfully", group });
+  }),
+];
+
+exports.sendMessageToGroup = [
+  passport.authenticate("jwt", { session: false }),
+  body("content")
+    .trim()
+    .notEmpty()
+    .withMessage("Message content cannot be empty")
+    .escape(),
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { groupId } = req.params;
+    const senderId = req.user._id;
+
+    let group = await Group.findById(groupId);
+
+    if (!group) {
+      let err = new Error("Group not found");
+      err.status = 404;
+      next(err);
+    }
+
+    // Create a new message instance
+    const newMessage = new Message({
+      sender: req.user._id,
+      chat: groupId,
+      chatType: "group",
+      content: req.body.content,
+    });
+
+    const message = await newMessage.save();
+
+    // Add lastMessageId to converstion
+    group.lastMessageId = message._id;
+    group.lastMessageSenderId = senderId;
+    await group.save();
+
+    res
+      .status(200)
+      .json({ msg: "Message sent to group successfully", message, group });
+  }),
+];
+
+exports.getGroupMessages = [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(async (req, res, next) => {
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) {
+      const err = new Error("Group not found");
+      err.status = 404;
+      next(err);
+    }
+
+    const messages = await Message.find({
+      chat: groupId,
+    })
+      .populate("sender", "username")
+      .sort({ timestamp: 1 });
+
+    res.json({ messages });
   }),
 ];
 
@@ -81,6 +147,7 @@ exports.getUserGroups = [
       members: { $in: [userId] },
     })
       .populate("lastMessageId")
+      .populate("lastMessageSenderId")
       .exec();
 
     res.json({ groups: userGroups });
@@ -308,6 +375,6 @@ exports.deleteGroup = [
       Group.findByIdAndDelete(groupId),
     ]);
 
-    res.json({message: "Group deleted succesfully"})
+    res.json({ message: "Group deleted succesfully" });
   }),
 ];

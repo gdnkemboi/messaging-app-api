@@ -5,6 +5,10 @@ const groupControllers = require("../controllers/groups");
 
 router.post("/groups", groupControllers.createGroup);
 
+router.post("/groups/:groupId/messages", groupControllers.sendMessageToGroup);
+
+router.get("/groups/:groupId/messages", groupControllers.getGroupMessages);
+
 router.get("/groups/:groupId", groupControllers.getGroupDetails);
 
 router.get("/groups", groupControllers.getUserGroups);

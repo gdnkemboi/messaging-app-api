@@ -3,12 +3,13 @@ const Schema = mongoose.Schema;
 
 const GroupSchema = new Schema({
   name: { type: String, required: true },
+  description: { type: String },
   admin: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
   members: [{ type: Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now() },
   updatedAt: { type: Date, default: Date.now() },
-  description: { type: String },
   lastMessageId: { type: Schema.Types.ObjectId, ref: "Message" },
+  lastMessageSenderId: { type: Schema.Types.ObjectId, ref: "User" },
 });
 
 // Pre-save hook to update the updatedAt field
