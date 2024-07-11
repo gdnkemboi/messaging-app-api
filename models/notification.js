@@ -4,8 +4,7 @@ const Schema = mongoose.Schema;
 
 const NotificationSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: "User" },
-  message: { type: String },
-  read: { type: Boolean, default: false },
+  content: { type: String },
   timestamp: { type: Date, default: Date.now() },
 });
 

@@ -1,7 +1,9 @@
 const asyncHandler = require("express-async-handler");
+const User = require("../models/user");
 const Message = require("../models/message");
 const Chat = require("../models/chat");
 const Contact = require("../models/contact");
+const Notification = require("../models/notification");
 const { body, validationResult } = require("express-validator");
 const passport = require("passport");
 
@@ -19,23 +21,26 @@ exports.sendMessage = [
     }
 
     const { receiverId } = req.params;
-    const senderId = req.user._id;
+    const userId = req.user._id;
 
-    let contact = Contact.findOne({ user: receiverId, contact: senderId });
+    const user = await User.findById(userId);
 
-    let [receiverContact, senderContact] = await Promise.all([
-      Contact.findOne({ user: receiverId, contact: senderId }),
-      Contact.findOne({ user: senderId, contact: receiverId }),
-    ]);
+    // Check if user is part of the receiver's contact
+    let receiverContact = await Contact.findOne({
+      user: receiverId,
+      contact: userId,
+    });
 
+    // If user is in receiver's contact and is blocked message can't get sent
     if (receiverContact && receiverContact.status === "blocked") {
       return res.json({
         message: "Can't send message to this user because you're blocked",
       });
-    } else if (!senderContact) {
-      contact = new Contact({
-        user: senderId,
-        contact: receiverId,
+    } else if (!receiverContact) {
+      // If user is not part of receiver's contact add them
+      let contact = new Contact({
+        user: receiverId,
+        contact: userId,
         status: "pending",
       });
 
@@ -44,13 +49,13 @@ exports.sendMessage = [
 
     // Check if chat already exists
     let chat = await Chat.findOne({
-      participants: { $all: [senderId, receiverId] },
+      participants: { $all: [userId, receiverId] },
     });
 
     // If no converstion foun, create a new one
     if (!chat) {
       let chat = new Chat({
-        participants: [senderId, receiverId],
+        participants: [userId, receiverId],
       });
 
       chat = await chat.save();
@@ -66,11 +71,19 @@ exports.sendMessage = [
 
     message = await message.save();
 
-    // Add lastMessageId to converstion
+    // Add new message notification
+    const notification = new Notification({
+      user: receiverId,
+      content: `You have a new message from ${user.username}`,
+    });
+
+    await notification.save();
+
+    // Add lastMessageId to conversation
     chat.lastMessageId = message._id;
     await chat.save();
 
-    res.status(200).json({ msg: "Message received successfully", message });
+    res.status(200).json({ msg: "Message sent successfully", message });
   }),
 ];
 

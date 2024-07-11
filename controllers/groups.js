@@ -2,6 +2,7 @@ const Group = require("../models/group");
 const User = require("../models/user");
 const Contact = require("../models/contact");
 const Message = require("../models/message");
+const Notification = require("../models/notification");
 const passport = require("passport");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
@@ -53,6 +54,16 @@ exports.createGroup = [
     });
 
     group = await group.save();
+
+    // Add notification to members added
+    for (let member of req.body.members) {
+      const notification = new Notification({
+        user: member,
+        content: `You have been added to ${req.body.name} group.`,
+      });
+
+      await notification.save();
+    }
 
     res.json({ message: "Group created successfully", group });
   }),
@@ -201,6 +212,7 @@ exports.addMembers = [
     const userId = req.user._id;
     const { groupId } = req.params;
     const group = await Group.findById(groupId);
+    const members = req.body.members;
 
     if (!group) {
       let err = new Error("Group not found");
@@ -217,7 +229,7 @@ exports.addMembers = [
     const updatedMembers = [...group.members];
 
     // Add members to the group members array
-    req.body.members.forEach((memberId) => {
+    members.forEach((memberId) => {
       if (!updatedMembers.includes(memberId)) {
         updatedMembers.push(memberId);
       }
@@ -229,6 +241,16 @@ exports.addMembers = [
       { $set: { members: updatedMembers } },
       { new: true }
     );
+
+    // Add notification to members added
+    for (let member of members) {
+      const notification = new Notification({
+        user: member,
+        content: `You have been added to ${group.name} group.`,
+      });
+
+      await notification.save();
+    }
 
     res.json({ message: "Members added successfully", group: updatedGroup });
   }),
@@ -264,6 +286,14 @@ exports.removeMember = [
       { $set: { members: updatedMembers } },
       { new: true }
     );
+
+    // Add notification to removed member
+    const notification = new Notification({
+      user: userToRemoveId,
+      content: `You have been removed to ${group.name} group.`,
+    });
+
+    await notification.save();
 
     res.json({
       message: `Member ${userToRemoveId} removed successfully`,
@@ -343,6 +373,15 @@ exports.appointAdmin = [
       { $set: { admin: admins } },
       { new: true }
     );
+
+    // Add notification to members added
+
+    const notification = new Notification({
+      user: userForAdminId,
+      content: `You are now an admin of ${group.name} group.`,
+    });
+
+    await notification.save();
 
     res.json({
       message: "New admin appointed successfully",

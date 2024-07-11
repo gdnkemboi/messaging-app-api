@@ -7,7 +7,9 @@ router.get("/notifications", notificationControllers.getNotifications);
 
 router.put(
   "/notifications/:notificationId/read",
-  notificationControllers.updateNotification
+  notificationControllers.markAsRead
 );
+
+router.put("/notifications/read", notificationControllers.markAllAsRead);
 
 module.exports = router;
