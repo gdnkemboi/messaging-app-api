@@ -7,7 +7,10 @@ const UserSchema = new Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profilePicture: {},
+  profilePicture: {
+    type: String,
+    default: "../images/blank-profile-picture.png",
+  },
   createdAt: { type: Date, default: Date.now() },
   status: { type: String, enum: ["Online", "Offline"], default: "Offline" },
 });

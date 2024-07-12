@@ -10,6 +10,6 @@ router.get("/profile", userControllers.getProfile);
 
 router.put("/profile", userControllers.updateProfile);
 
-router.get("/:id/profile", userControllers.getUser);
+router.get("/:userId/profile", userControllers.getUser);
 
 module.exports = router;
