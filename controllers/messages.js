@@ -33,7 +33,7 @@ exports.sendMessage = [
 
     // If user is in receiver's contact and is blocked message can't get sent
     if (receiverContact && receiverContact.status === "blocked") {
-      return res.json({
+      return res.json.status(403)({
         message: "Can't send message to this user because you're blocked",
       });
     } else if (!receiverContact) {
@@ -96,6 +96,11 @@ exports.updateMessageStatus = asyncHandler(async (req, res, next) => {
     err.status = 404;
     next(err);
   }
+
+  if (!["delivered", "read"].includes(status)) {
+    return res.status(400).json({ message: "Invalid status" });
+  }
+
   switch (status) {
     case "delivered":
       message.status = "delivered";

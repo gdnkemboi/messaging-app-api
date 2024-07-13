@@ -5,6 +5,7 @@ const logger = require("morgan");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const passport = require("./config/passport");
+const { swaggerUi, swaggerSpec } = require("./config/swagger");
 
 main().catch((err) => console.log(err));
 
@@ -37,6 +38,9 @@ app.use("/api", chatsRouter);
 app.use("/api", groupsRouter);
 app.use("/api", contactsRouter);
 app.use("/api", notificationsRouter);
+
+// Swagger setup
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
