@@ -55,9 +55,28 @@ exports.signup = [
     }
 
     const { username, email, password } = req.body;
+
+    // Check if the username or email already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      let field = existingUser.username === username ? "username" : "email";
+      let value = existingUser.username === username ? username : email;
+      return res.status(400).json({
+        error: {
+          message: `The ${field} '${value}' is already taken.`,
+          status: 400,
+        },
+      });
+    }
+
     const newUser = new User({ username, email, password });
-    await newUser.save();
-    res.status(201).json({ message: "Signed up successfully" });
+
+    try {
+      await newUser.save();
+      res.status(201).json({ message: "Signed up successfully" });
+    } catch (error) {
+      next(error);
+    }
   }),
 ];
 
@@ -66,7 +85,7 @@ exports.signin = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(401).json({ errors: errors.array() });
     }
 
     passport.authenticate("local", { session: false }, (err, user, info) => {
@@ -74,7 +93,7 @@ exports.signin = [
         return next(err);
       }
       if (!user) {
-        return res.status(400).json({ message: "Invalid credentials", info });
+        return res.status(401).json({ message: "Invalid credentials", info });
       }
       const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
         expiresIn: "7d",
@@ -201,3 +220,17 @@ exports.getUser = [
     res.json(user);
   }),
 ];
+
+exports.validateToken = (req, res, next) => {
+  const token = req.body.token;
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    res.status(200).json({ valid: true });
+  } catch (error) {
+    res.status(401).json({ valid: false, message: "Invalid token" });
+  }
+};

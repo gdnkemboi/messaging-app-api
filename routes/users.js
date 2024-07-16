@@ -66,7 +66,7 @@ router.post("/signup", userControllers.signup);
  *     responses:
  *       200:
  *         description: Signed In successfully
- *       400:
+ *       401:
  *         description: Validation error or invalid credentials
  */
 router.post("/signin", userControllers.signin);
@@ -168,5 +168,63 @@ router.put("/profile", userControllers.updateProfile);
  *         description: User not found
  */
 router.get("/:userId/profile", userControllers.getUser);
+
+/**
+ * @swagger
+ * /users/validate-token:
+ *   post:
+ *     summary: Validate a JWT token
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The JWT token to validate
+ *             example:
+ *               token: "your.jwt.token"
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   description: Indicates if the token is valid
+ *                   example: true
+ *       400:
+ *         description: Token is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Token is required
+ *       401:
+ *         description: Invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid token
+ */
+router.post("/validate-token", userControllers.validateToken);
 
 module.exports = router;
