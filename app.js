@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const passport = require("./config/passport");
 const { swaggerUi, swaggerSpec } = require("./config/swagger");
+const cors = require("cors");
 
 main().catch((err) => console.log(err));
 
@@ -28,6 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+// Configure CORS
+app.use(cors());
 
 app.use(passport.initialize());
 
