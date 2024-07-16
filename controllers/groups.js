@@ -3,13 +3,13 @@ const User = require("../models/user");
 const Contact = require("../models/contact");
 const Message = require("../models/message");
 const Notification = require("../models/notification");
-const passport = require("passport");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 const { mongoose } = require("mongoose");
+const authenticateJWT = require("../middleware/authenticateJWT");
 
 exports.createGroup = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
 
   // Convert members to an array.
   (req, res, next) => {
@@ -70,7 +70,7 @@ exports.createGroup = [
 ];
 
 exports.sendMessageToGroup = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   body("content")
     .trim()
     .notEmpty()
@@ -115,7 +115,7 @@ exports.sendMessageToGroup = [
 ];
 
 exports.getGroupMessages = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const { groupId } = req.params;
     const group = await Group.findById(groupId);
@@ -151,7 +151,7 @@ exports.getGroupDetails = asyncHandler(async (req, res, next) => {
 });
 
 exports.getUserGroups = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const userGroups = await Group.find({
@@ -166,7 +166,7 @@ exports.getUserGroups = [
 ];
 
 exports.updateGroupDetails = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
 
   body("name")
     .trim()
@@ -198,7 +198,7 @@ exports.updateGroupDetails = [
 ];
 
 exports.addMembers = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   // Convert members to an array.
   (req, res, next) => {
     if (!Array.isArray(req.body.members)) {
@@ -257,7 +257,7 @@ exports.addMembers = [
 ];
 
 exports.removeMember = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const userToRemoveId = req.params.userId;
@@ -303,7 +303,7 @@ exports.removeMember = [
 ];
 
 exports.leaveGroup = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { groupId } = req.params;
@@ -344,7 +344,7 @@ exports.leaveGroup = [
 ];
 
 exports.appointAdmin = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const userForAdminId = req.params.userId;
@@ -391,7 +391,7 @@ exports.appointAdmin = [
 ];
 
 exports.deleteGroup = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { groupId } = req.params;

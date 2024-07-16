@@ -1,9 +1,9 @@
 const Contact = require("../models/contact");
 const asyncHandler = require("express-async-handler");
-const passport = require("passport");
+const authenticateJWT = require("../middleware/authenticateJWT");
 
 exports.addContact = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { contactId } = req.params;
@@ -21,7 +21,7 @@ exports.addContact = [
 ];
 
 exports.getUserContacts = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { status } = req.params;
@@ -36,7 +36,7 @@ exports.getUserContacts = [
 ];
 
 exports.blockContact = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const contactUserId = req.params.contactId;
@@ -61,7 +61,7 @@ exports.blockContact = [
 ];
 
 exports.deleteContact = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     await Contact.deleteOne({ contact: req.params.contactId });
 

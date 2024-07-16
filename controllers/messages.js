@@ -5,10 +5,10 @@ const Chat = require("../models/chat");
 const Contact = require("../models/contact");
 const Notification = require("../models/notification");
 const { body, validationResult } = require("express-validator");
-const passport = require("passport");
+const authenticateJWT = require("../middleware/authenticateJWT");
 
 exports.sendMessage = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   body("content")
     .trim()
     .notEmpty()

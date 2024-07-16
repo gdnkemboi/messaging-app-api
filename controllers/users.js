@@ -7,6 +7,7 @@ const passport = require("passport");
 const multer = require("multer");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
+const authenticateJWT = require("../middleware/authenticateJWT");
 
 // Validation rules
 const signupValidationRules = [
@@ -105,14 +106,22 @@ exports.signin = [
 ];
 
 exports.getProfile = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
-    const user = await User.findById(userId).select("-password");
+    let user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
+
+    // Modify the user object to include the full URL for the profile picture
+    user = {
+      ...user.toObject(),
+      profilePicture: user.profilePicture
+        ? `${req.protocol}://${req.get("host")}${user.profilePicture}`
+        : null,
+    };
 
     res.json(user);
   }),
@@ -120,7 +129,7 @@ exports.getProfile = [
 
 // Set storage engine
 const storage = multer.diskStorage({
-  destination: "./uploads/profile-pictures/",
+  destination: "./public/uploads/profile-pictures/",
   filename: function (req, file, cb) {
     cb(null, file.fieldname + "-" + uuidv4() + path.extname(file.originalname));
   },
@@ -152,7 +161,7 @@ function checkFileType(file, cb) {
 }
 
 exports.updateProfile = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
 
   // Validation
   body("username")
@@ -186,10 +195,11 @@ exports.updateProfile = [
         const updates = {};
         if (username) updates.username = username;
         if (email) updates.email = email;
-        if (req.file) updates.profilePicture = req.file.path;
+        if (req.file)
+          updates.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
 
         try {
-          const user = await User.findByIdAndUpdate(userId, updates, {
+          let user = await User.findByIdAndUpdate(userId, updates, {
             new: true,
             runValidators: true,
           }).select("-password");
@@ -197,6 +207,14 @@ exports.updateProfile = [
           if (!user) {
             return res.status(404).json({ msg: "User not found" });
           }
+
+          // Modify the user object to include the full URL for the profile picture
+          user = {
+            ...user.toObject(),
+            profilePicture: user.profilePicture
+              ? `${req.protocol}://${req.get("host")}${user.profilePicture}`
+              : null,
+          };
 
           res.json(user);
         } catch (error) {
@@ -208,14 +226,22 @@ exports.updateProfile = [
 ];
 
 exports.getUser = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const { userId } = req.params;
-    const user = await User.findById(userId).select("-password");
+    let user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ msg: "User not found" });
     }
+
+    // Modify the user object to include the full URL for the profile picture
+    user = {
+      ...user.toObject(),
+      profilePicture: user.profilePicture
+        ? `${req.protocol}://${req.get("host")}${user.profilePicture}`
+        : null,
+    };
 
     res.json(user);
   }),

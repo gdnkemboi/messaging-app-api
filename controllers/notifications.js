@@ -1,9 +1,10 @@
 const Contact = require("../models/contact");
 const asyncHandler = require("express-async-handler");
-const passport = require("passport");
+const authenticateJWT = require("../middleware/authenticateJWT");
+
 
 exports.getNotifications = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const notifications = await Notification.find({ user: userId });
@@ -13,7 +14,7 @@ exports.getNotifications = [
 ];
 
 exports.markAsRead = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { notificationId } = req.params;
@@ -25,7 +26,7 @@ exports.markAsRead = [
 ];
 
 exports.markAllAsRead = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
 

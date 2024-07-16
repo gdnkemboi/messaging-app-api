@@ -1,10 +1,10 @@
 const Chat = require("../models/chat");
 const Message = require("../models/message");
 const asyncHandler = require("express-async-handler");
-const passport = require("passport");
+const authenticateJWT = require("../middleware/authenticateJWT");
 
 exports.getUserChats = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const chats = await Chat.find({
@@ -16,7 +16,7 @@ exports.getUserChats = [
 ];
 
 exports.getChatMessages = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const chat = await Chat.findById(req.params.chatId);
     if (!chat) {
@@ -36,7 +36,7 @@ exports.getChatMessages = [
 ];
 
 exports.deleteChat = [
-  passport.authenticate("jwt", { session: false }),
+  authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const chatId = req.params.chatId;
 
