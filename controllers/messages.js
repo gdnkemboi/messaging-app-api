@@ -33,7 +33,7 @@ exports.sendMessage = [
 
     // If user is in receiver's contact and is blocked message can't get sent
     if (receiverContact && receiverContact.status === "blocked") {
-      return res.json.status(403)({
+      return res.status(403).json({
         message: "Can't send message to this user because you're blocked",
       });
     } else if (!receiverContact) {
@@ -52,9 +52,9 @@ exports.sendMessage = [
       participants: { $all: [userId, receiverId] },
     });
 
-    // If no converstion foun, create a new one
+    // If no chat found, create a new one
     if (!chat) {
-      let chat = new Chat({
+      chat = new Chat({
         participants: [userId, receiverId],
       });
 
@@ -63,7 +63,7 @@ exports.sendMessage = [
 
     // Create a new message instance
     let message = new Message({
-      sender: req.user._id,
+      sender: userId,
       chat: chat._id,
       chatType: "chat",
       content: req.body.content,
@@ -83,7 +83,7 @@ exports.sendMessage = [
     chat.lastMessageId = message._id;
     await chat.save();
 
-    res.status(200).json({ msg: "Message sent successfully", message });
+    res.status(200).json({ msg: "Message sent successfully", message, chat });
   }),
 ];
 

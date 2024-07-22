@@ -158,14 +158,20 @@ router.get("/groups", groupControllers.getUserGroups);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
+ *                 description: The name of the group
  *               description:
  *                 type: string
+ *                 description: The description of the group
+ *               groupIcon:
+ *                 type: string
+ *                 format: binary
+ *                 description: The icon of the group
  *     responses:
  *       200:
  *         description: Group updated successfully

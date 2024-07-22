@@ -7,6 +7,9 @@ const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 const { mongoose } = require("mongoose");
 const authenticateJWT = require("../middleware/authenticateJWT");
+const multer = require("multer");
+const path = require("path");
+const { v4: uuidv4 } = require("uuid");
 
 exports.createGroup = [
   authenticateJWT,
@@ -154,47 +157,111 @@ exports.getUserGroups = [
   authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
-    const userGroups = await Group.find({
+    let userGroups = await Group.find({
       members: { $in: [userId] },
     })
       .populate("lastMessageId")
       .populate("lastMessageSenderId")
+      .populate("members", "-password")
       .exec();
+
+    userGroups = userGroups.map((group) => {
+      group.groupIcon = `${req.protocol}://${req.get("host")}${
+        group.groupIcon
+      }`;
+      return group;
+    });
 
     res.json({ groups: userGroups });
   }),
 ];
 
+// Set storage engine
+const storage = multer.diskStorage({
+  destination: "./public/uploads/group-icons/",
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + uuidv4() + path.extname(file.originalname));
+  },
+});
+
+// Init upload
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000000 }, // 1MB limit
+  fileFilter: function (req, file, cb) {
+    checkFileType(file, cb);
+  },
+}).single("groupIcon");
+
+// Check file type
+function checkFileType(file, cb) {
+  // Allowed ext
+  const filetypes = /jpeg|jpg|png|gif/;
+  // Check ext
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  // Check mime
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb("Error: Images Only!");
+  }
+}
+
 exports.updateGroupDetails = [
   authenticateJWT,
 
-  body("name")
-    .trim()
-    .notEmpty()
-    .withMessage("Group name cannot be empty")
-    .escape(),
-  body("description").trim().escape(),
+  // Validation
+  body("name").trim().optional().escape(),
+  body("description").trim().optional().escape(),
 
-  asyncHandler(async (req, res, next) => {
-    const { groupId } = req.params;
+  (req, res, next) => {
+    // Check for validation errors
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
-    } else {
-      let group = await Group.findByIdAndUpdate(
-        groupId,
-        {
-          $set: {
-            name: req.body.name,
-            description: req.body.description,
-          },
-        },
-        { new: true }
-      );
-      res.json({ message: "Group updated successfully", group });
     }
-  }),
+
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ msg: err });
+      } else {
+        const { groupId } = req.params;
+        const { name, description } = req.body;
+
+        // Create an object with the fields to update
+        const updates = {};
+        if (name) updates.name = name;
+        if (description) updates.description = description;
+        if (req.file)
+          updates.groupIcon = `/uploads/group-icons/${req.file.filename}`;
+
+        try {
+          let group = await Group.findByIdAndUpdate(groupId, updates, {
+            new: true,
+            runValidators: true,
+          });
+
+          if (!group) {
+            return res.status(404).json({ msg: "Group not found" });
+          }
+
+          // Modify the group object to include the full URL for the group icon
+          group = {
+            ...group.toObject(),
+            groupIcon: group.groupIcon
+              ? `${req.protocol}://${req.get("host")}${group.groupIcon}`
+              : null,
+          };
+
+          res.json({ message: "Group updated successfully", group });
+        } catch (error) {
+          next(error);
+        }
+      }
+    });
+  },
 ];
 
 exports.addMembers = [
@@ -339,7 +406,26 @@ exports.leaveGroup = [
       { new: true }
     );
 
-    res.json({ message: "User left the group successfully", group });
+    let userGroups = await Group.find({
+      members: { $in: [userId] },
+    })
+      .populate("lastMessageId")
+      .populate("lastMessageSenderId")
+      .populate("members", "-password")
+      .exec();
+
+    userGroups = userGroups.map((group) => {
+      group.groupIcon = `${req.protocol}://${req.get("host")}${
+        group.groupIcon
+      }`;
+      return group;
+    });
+
+    res.json({
+      message: "User left the group successfully",
+      group,
+      groups: userGroups,
+    });
   }),
 ];
 

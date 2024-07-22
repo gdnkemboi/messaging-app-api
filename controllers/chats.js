@@ -7,9 +7,24 @@ exports.getUserChats = [
   authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
-    const chats = await Chat.find({
+    let chats = await Chat.find({
       participants: { $in: [userId] },
-    }).populate("participants");
+    })
+      .populate("participants")
+      .populate("lastMessageId");
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // Construct full URL for participants' profile pictures
+    chats = chats.map((chat) => {
+      chat.participants = chat.participants.map((participant) => {
+        participant.profilePicture = participant.profilePicture
+          ? `${baseUrl}${participant.profilePicture}`
+          : null;
+        return participant;
+      });
+      return chat;
+    });
 
     res.json({ chats });
   }),
@@ -39,6 +54,7 @@ exports.deleteChat = [
   authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const chatId = req.params.chatId;
+    const userId = req.user._id;
 
     // Delete the chat
     const chat = await Chat.findByIdAndDelete(chatId);
@@ -49,6 +65,26 @@ exports.deleteChat = [
     // Delete all messages associated with the chat
     await Message.deleteMany({ chat: chatId });
 
-    res.json({ message: "Chat and its messages deleted" });
+    // Fetch remaining user chats
+    let chats = await Chat.find({
+      participants: { $in: [userId] },
+    })
+      .populate("participants")
+      .populate("lastMessageId");
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // Construct full URL for participants' profile pictures
+    chats = chats.map((chat) => {
+      chat.participants = chat.participants.map((participant) => {
+        participant.profilePicture = participant.profilePicture
+          ? `${baseUrl}${participant.profilePicture}`
+          : null;
+        return participant;
+      });
+      return chat;
+    });
+
+    res.json({ message: "Chat and its messages deleted", chats });
   }),
 ];
