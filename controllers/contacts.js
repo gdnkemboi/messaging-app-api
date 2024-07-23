@@ -24,12 +24,21 @@ exports.getUserContacts = [
   authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
-    const { status } = req.params;
 
-    const contacts = await Contact.find({
+    let contacts = await Contact.find({
       user: userId,
-      status: status,
-    }).populate("contact", "username");
+    }).populate("contact", "-password");
+
+    // Modify the contact object to include the full URL for the profile picture
+    contacts = contacts.map((contact) => {
+      contact.contact = {
+        ...contact.contact.toObject(),
+        profilePicture: `${req.protocol}://${req.get("host")}${
+          contact.contact.profilePicture
+        }`,
+      };
+      return contact;
+    });
 
     res.json({ contacts });
   }),

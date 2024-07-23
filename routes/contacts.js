@@ -36,26 +36,19 @@ router.post("/contacts/:contactId", contactControllers.addContact);
 
 /**
  * @swagger
- * /api/contacts/{status}:
+ * /api/contacts/:
  *   get:
- *     summary: Get user contacts by status
+ *     summary: Get user contacts
  *     tags: [Contacts]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: status
- *         required: true
- *         schema:
- *           type: string
- *         description: The status of contacts to retrieve (e.g., accepted, blocked)
  *     responses:
  *       200:
  *         description: List of contacts
  *       401:
  *         description: Unauthorized
  */
-router.get("/contacts/:status", contactControllers.getUserContacts);
+router.get("/contacts/", contactControllers.getUserContacts);
 
 /**
  * @swagger
