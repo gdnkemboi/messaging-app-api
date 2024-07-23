@@ -48,7 +48,7 @@ router.get("/notifications", notificationControllers.getNotifications);
  *       404:
  *         description: Notification not found
  */
-router.put(
+router.delete(
   "/notifications/:notificationId/read",
   notificationControllers.markAsRead
 );
@@ -67,6 +67,6 @@ router.put(
  *       401:
  *         description: Unauthorized
  */
-router.put("/notifications/read", notificationControllers.markAllAsRead);
+router.delete("/notifications/read", notificationControllers.markAllAsRead);
 
 module.exports = router;

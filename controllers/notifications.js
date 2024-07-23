@@ -1,7 +1,6 @@
-const Contact = require("../models/contact");
+const Notification = require("../models/notification");
 const asyncHandler = require("express-async-handler");
 const authenticateJWT = require("../middleware/authenticateJWT");
-
 
 exports.getNotifications = [
   authenticateJWT,
@@ -32,6 +31,6 @@ exports.markAllAsRead = [
 
     const notifications = await Notification.deleteMany({ user: userId });
 
-    res.json({ message: "All Notification cleared" });
+    res.json({ message: "All notifications cleared" });
   }),
 ];
