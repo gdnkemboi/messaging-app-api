@@ -11,6 +11,7 @@ const UserSchema = new Schema({
     type: String,
     default: "/images/blank-profile-picture.png",
   },
+  about: { type: String, default: "Just chatting here!" },
   createdAt: { type: Date, default: Date.now() },
   status: { type: String, enum: ["Online", "Offline"], default: "Offline" },
 });

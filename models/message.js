@@ -11,7 +11,7 @@ const MessageSchema = new Schema({
     enum: ["chat", "group"],
   },
   content: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now() },
+  timestamp: { type: Date, default: Date.now },
   status: {
     type: String,
     enum: ["sent", "delivered", "read"],

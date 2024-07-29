@@ -157,25 +157,33 @@ exports.getUserGroups = [
   authenticateJWT,
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
+
+    // Fetch user groups and populate fields
     let userGroups = await Group.find({
       members: { $in: [userId] },
     })
       .populate("lastMessageId")
-      .populate("lastMessageSenderId")
+      .populate("lastMessageSenderId", "-password")
       .populate("members", "-password")
-      .exec();
+      .lean();
 
+    // Map over user groups to modify groupIcon and members' profile pictures
     userGroups = userGroups.map((group) => {
-      group.groupIcon = `${req.protocol}://${req.get("host")}${
-        group.groupIcon
-      }`;
-      return group;
+      return {
+        ...group,
+        groupIcon: `${req.protocol}://${req.get("host")}${group.groupIcon}`,
+        members: group.members.map((member) => ({
+          ...member,
+          profilePicture: `${req.protocol}://${req.get("host")}${
+            member.profilePicture
+          }`,
+        })),
+      };
     });
 
     res.json({ groups: userGroups });
   }),
 ];
-
 // Set storage engine
 const storage = multer.diskStorage({
   destination: "./public/uploads/group-icons/",
@@ -279,45 +287,52 @@ exports.addMembers = [
     const userId = req.user._id;
     const { groupId } = req.params;
     const group = await Group.findById(groupId);
-    const members = req.body.members;
 
     if (!group) {
-      let err = new Error("Group not found");
+      const err = new Error("Group not found");
       err.status = 404;
-      next(err);
+      return next(err);
     }
 
     if (!group.isAdmin(userId)) {
-      let err = new Error("Only admins can add members");
+      const err = new Error("Only admins can add members");
       err.status = 403;
-      next(err);
+      return next(err);
     }
 
-    const updatedMembers = [...group.members];
+    const members = req.body.members;
 
-    // Add members to the group members array
-    members.forEach((memberId) => {
-      if (!updatedMembers.includes(memberId)) {
-        updatedMembers.push(memberId);
-      }
-    });
+    // Filter out members that are already in the group
+    const newMembers = members.filter(
+      (memberId) => !group.members.includes(memberId)
+    );
+
+    // If no new members to add, return a response indicating no members were added
+    if (newMembers.length === 0) {
+      return res.json({ message: "No new members to add", group });
+    }
+
+    // Add new members to the group members array
+    const updatedMembers = [...group.members, ...newMembers];
 
     // Update the group with $set to update members
-    let updatedGroup = await Group.findByIdAndUpdate(
+    const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
       { $set: { members: updatedMembers } },
       { new: true }
+    ).populate("members", "username");
+
+    // Add notification to new members added
+    await Promise.all(
+      newMembers.map(async (member) => {
+        const notification = new Notification({
+          user: member,
+          content: `You have been added to ${group.name} group.`,
+        });
+
+        await notification.save();
+      })
     );
-
-    // Add notification to members added
-    for (let member of members) {
-      const notification = new Notification({
-        user: member,
-        content: `You have been added to ${group.name} group.`,
-      });
-
-      await notification.save();
-    }
 
     res.json({ message: "Members added successfully", group: updatedGroup });
   }),
