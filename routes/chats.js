@@ -52,6 +52,33 @@ router.get("/chats/:chatId/messages", chatControllers.getChatMessages);
 
 /**
  * @swagger
+ * /api/chats/{otherUserId}:
+ *   post:
+ *     summary: Create a new chat with another user
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: otherUserId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user to start a chat with
+ *     responses:
+ *       201:
+ *         description: Chat created successfully
+ *       401:
+ *         description: Unauthorized
+ *       400:
+ *         description: Bad request, invalid data
+ *       404:
+ *         description: User not found
+ */
+router.post("/chats/:otherUserId", chatControllers.createChat);
+
+/**
+ * @swagger
  * /api/chats/{chatId}:
  *   delete:
  *     summary: Delete a chat

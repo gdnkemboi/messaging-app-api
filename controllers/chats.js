@@ -5,28 +5,29 @@ const authenticateJWT = require("../middleware/authenticateJWT");
 
 exports.getUserChats = [
   authenticateJWT,
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const userId = req.user._id;
+
     let chats = await Chat.find({
       participants: { $in: [userId] },
     })
       .populate("participants")
-      .populate("lastMessageId");
+      .populate("lastMessageId")
+      .sort({ lastMessageId: -1 })
+      .lean();
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    // Construct full URL for participants' profile pictures
-    chats = chats.map((chat) => {
-      chat.participants = chat.participants.map((participant) => {
-        participant.profilePicture = participant.profilePicture
-          ? `${baseUrl}${participant.profilePicture}`
-          : null;
-        return participant;
-      });
-      return chat;
-    });
+    // Modify profile picture URLs
+    chats = chats.map((chat) => ({
+      ...chat,
+      participants: chat.participants.map((participant) => ({
+        ...participant,
+        profilePicture: `${baseUrl}${participant.profilePicture}`,
+      })),
+    }));
 
-    res.json({ chats });
+    res.status(200).json({ chats });
   }),
 ];
 
@@ -47,6 +48,57 @@ exports.getChatMessages = [
       .sort({ timestamp: 1 });
 
     res.json({ messages });
+  }),
+];
+
+exports.createChat = [
+  authenticateJWT,
+  asyncHandler(async (req, res) => {
+    const { otherUserId } = req.params;
+    const userId = req.user._id;
+
+    // Check if chat already exists
+    let chat = await Chat.findOne({
+      participants: { $all: [userId, otherUserId] },
+    })
+      .populate("participants")
+      .lean();
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // If chat found, return it; otherwise, create a new one
+    if (chat) {
+      // Add full URL for profile picture
+      chat = {
+        ...chat,
+        participants: chat.participants.map((participant) => ({
+          ...participant,
+          profilePicture: `${baseUrl}${participant.profilePicture}`,
+        })),
+      };
+
+      return res.status(200).json({ msg: "Chat already exists", chat });
+    }
+
+    chat = new Chat({
+      participants: [userId, otherUserId],
+    });
+
+    await chat.save();
+
+    // Populate participants after saving the new chat
+    chat = await Chat.findById(chat._id).populate("participants").lean();
+
+    // Add full URL for profile picture
+    chat = {
+      ...chat,
+      participants: chat.participants.map((participant) => ({
+        ...participant,
+        profilePicture: `${baseUrl}${participant.profilePicture}`,
+      })),
+    };
+
+    res.status(201).json({ msg: "Chat created successfully", chat });
   }),
 ];
 
