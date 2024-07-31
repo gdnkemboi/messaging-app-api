@@ -45,10 +45,11 @@ exports.createGroup = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    let userId = req.user._id;
-    let members = [...req.body.members];
+    const userId = req.user._id;
+    const members = [...req.body.members];
     members.unshift(userId);
 
+    // Create and save the group
     let group = new Group({
       name: req.body.name,
       description: req.body.description,
@@ -67,6 +68,23 @@ exports.createGroup = [
 
       await notification.save();
     }
+
+    // Fetch the group and populate the members
+    group = await Group.findById(group._id)
+      .populate("members", "-password")
+      .lean();
+
+    // Modify groupIcon and members' profile pictures to have full URLs
+    group = {
+      ...group,
+      groupIcon: `${req.protocol}://${req.get("host")}${group.groupIcon}`,
+      members: group.members.map((member) => ({
+        ...member,
+        profilePicture: `${req.protocol}://${req.get("host")}${
+          member.profilePicture
+        }`,
+      })),
+    };
 
     res.json({ message: "Group created successfully", group });
   }),
@@ -165,6 +183,7 @@ exports.getUserGroups = [
       .populate("lastMessageId")
       .populate("lastMessageSenderId", "-password")
       .populate("members", "-password")
+      .sort({ lastMessageId: -1 })
       .lean();
 
     // Map over user groups to modify groupIcon and members' profile pictures
