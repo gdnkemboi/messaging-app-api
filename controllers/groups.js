@@ -305,7 +305,7 @@ exports.addMembers = [
   asyncHandler(async (req, res, next) => {
     const userId = req.user._id;
     const { groupId } = req.params;
-    const group = await Group.findById(groupId);
+    let group = await Group.findById(groupId).populate("members", "-password");
 
     if (!group) {
       const err = new Error("Group not found");
@@ -322,12 +322,30 @@ exports.addMembers = [
     const members = req.body.members;
 
     // Filter out members that are already in the group
+    const existingMemberIds = group.members.map((member) =>
+      member._id.toString()
+    );
+
     const newMembers = members.filter(
-      (memberId) => !group.members.includes(memberId)
+      (memberId) => !existingMemberIds.includes(memberId)
     );
 
     // If no new members to add, return a response indicating no members were added
     if (newMembers.length === 0) {
+      group = group.toObject();
+
+      // Modify groupIcon and members' profile pictures to have full URLs
+      group = {
+        ...group,
+        groupIcon: `${req.protocol}://${req.get("host")}${group.groupIcon}`,
+        members: group.members.map((member) => ({
+          ...member,
+          profilePicture: `${req.protocol}://${req.get("host")}${
+            member.profilePicture
+          }`,
+        })),
+      };
+
       return res.json({ message: "No new members to add", group });
     }
 
@@ -339,7 +357,7 @@ exports.addMembers = [
       groupId,
       { $set: { members: updatedMembers } },
       { new: true }
-    ).populate("members", "username");
+    ).populate("members", "-password");
 
     // Add notification to new members added
     await Promise.all(
@@ -353,7 +371,21 @@ exports.addMembers = [
       })
     );
 
-    res.json({ message: "Members added successfully", group: updatedGroup });
+    group = updatedGroup.toObject();
+
+    // Modify groupIcon and members' profile pictures to have full URLs
+    group = {
+      ...group,
+      groupIcon: `${req.protocol}://${req.get("host")}${group.groupIcon}`,
+      members: group.members.map((member) => ({
+        ...member,
+        profilePicture: `${req.protocol}://${req.get("host")}${
+          member.profilePicture
+        }`,
+      })),
+    };
+
+    res.json({ message: "Members added successfully", group });
   }),
 ];
 
