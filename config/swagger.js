@@ -1,5 +1,6 @@
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+require("dotenv").config();
 
 // Swagger definition
 const swaggerDefinition = {
@@ -12,8 +13,8 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: "http://localhost:3000",
-      description: "Development server",
+      url: process.env.SWAGGER_SERVER_URL || "http://localhost:3000",
+      description: "Server",
     },
   ],
   components: {
@@ -30,19 +31,4 @@ const swaggerDefinition = {
       bearerAuth: [],
     },
   ],
-};
-
-// Options for the swagger docs
-const options = {
-  swaggerDefinition,
-  // Path to the API docs
-  apis: ["./routes/*.js"], // files containing annotations as above
-};
-
-// Initialize swagger-jsdoc
-const swaggerSpec = swaggerJSDoc(options);
-
-module.exports = {
-  swaggerUi,
-  swaggerSpec,
 };
