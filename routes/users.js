@@ -11,7 +11,7 @@ const userControllers = require("../controllers/users");
 
 /**
  * @swagger
- * /users/signup:
+ * /api/users/signup:
  *   post:
  *     summary: User signup
  *     tags: [Users]
@@ -44,7 +44,7 @@ router.post("/signup", userControllers.signup);
 
 /**
  * @swagger
- * /users/signin:
+ * /api/users/signin:
  *   post:
  *     summary: User signin
  *     tags: [Users]
@@ -73,7 +73,7 @@ router.post("/signin", userControllers.signin);
 
 /**
  * @swagger
- * /users/profile:
+ * /api/users/profile:
  *   get:
  *     summary: Get user profile
  *     tags: [Users]
@@ -102,7 +102,7 @@ router.get("/profile", userControllers.getProfile);
 
 /**
  * @swagger
- * /users/profile:
+ * /api/users/profile:
  *   put:
  *     summary: Update user profile
  *     tags: [Users]
@@ -135,7 +135,7 @@ router.put("/profile", userControllers.updateProfile);
 
 /**
  * @swagger
- * /users/{userId}/profile:
+ * /api/users/{userId}/profile:
  *   get:
  *     summary: Get another user's profile
  *     tags: [Users]
@@ -171,7 +171,7 @@ router.get("/:userId/profile", userControllers.getUser);
 
 /**
  * @swagger
- * /users/validate-token:
+ * /api/users/validate-token:
  *   post:
  *     summary: Validate a JWT token
  *     tags: [Users]

@@ -17,7 +17,6 @@ async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
 }
 
-const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const messagesRouter = require("./routes/messages");
 const chatsRouter = require("./routes/chats");
@@ -33,7 +32,8 @@ app.use(compression());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      "script-src": ["'self'"],
+      "default-src": ["'self'"],
+      "img-src": ["'self'", "data:"], // Allow images from the same origin and data URLs
     },
   })
 );
@@ -59,16 +59,12 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Configure CORS
-// Define allowed origins for production
-const allowedOrigins = [""];
+const allowedOrigins = ["https://chat-app-wjws.onrender.com"]; // Allowed origins
 
-// CORS options
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // Allow requests with no origin
 
-    // Allow requests from allowed origins
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -87,16 +83,13 @@ if (process.env.NODE_ENV === "production") {
 
 app.use(passport.initialize());
 
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
+app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api/users", usersRouter);
 app.use("/api", messagesRouter);
 app.use("/api", chatsRouter);
 app.use("/api", groupsRouter);
 app.use("/api", contactsRouter);
 app.use("/api", notificationsRouter);
-
-// Swagger setup
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -107,11 +100,7 @@ app.use(function (req, res, next) {
 
 // Error handler
 app.use(function (err, req, res, next) {
-  // Set response status code
-  res.status(err.status || 500);
-
-  // Return JSON response
-  res.json({
+  res.status(err.status || 500).json({
     error: {
       message: err.message,
       status: err.status || 500,
