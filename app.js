@@ -59,7 +59,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Configure CORS
-const allowedOrigins = ["https://chat-app-wjws.onrender.com"]; // Allowed origins
+const allowedOrigins = ["https://chat-app-wjws.onrender.com", "http://localhost:5173"]; // Allowed origins
 
 const corsOptions = {
   origin: function (origin, callback) {
