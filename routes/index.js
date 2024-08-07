@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+/* Redirect to /api-docs. */
+router.get("/", function (req, res, next) {
+  res.redirect("/api-docs");
 });
 
 module.exports = router;

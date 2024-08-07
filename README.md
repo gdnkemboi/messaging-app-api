@@ -5,6 +5,7 @@
 - Node.js
 - Express
 - MongoDB
+- Swagger (For API documanetation)
 
 ## Features
 
